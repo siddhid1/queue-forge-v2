@@ -1,0 +1,121 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: queue-forge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: queue_forge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: queue-forge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  api:
+    image: node:22
+    container_name: queue-forge-api
+    restart: unless-stopped
+    working_dir: /workspace
+    command: pnpm --filter @queue-forge/api start
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/queue_forge
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../:/workspace
+
+  worker:
+    image: node:22
+    container_name: queue-forge-worker
+    restart: unless-stopped
+    working_dir: /workspace
+    command: pnpm --filter @queue-forge/worker start
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/queue_forge
+      REDIS_URL: redis://redis:6379
+      WORKER_METRICS_PORT: 9101
+    ports:
+      - "9101:9101"
+    volumes:
+      - ../../:/workspace
+
+  publisher:
+    image: node:22
+    container_name: queue-forge-publisher
+    restart: unless-stopped
+    working_dir: /workspace
+    command: pnpm --filter @queue-forge/publisher start
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/queue_forge
+      REDIS_URL: redis://redis:6379
+      PUBLISHER_METRICS_PORT: 9102
+    ports:
+      - "9102:9102"
+    volumes:
+      - ../../:/workspace
+
+  scheduler:
+    image: node:22
+    container_name: queue-forge-scheduler
+    restart: unless-stopped
+    working_dir: /workspace
+    command: pnpm --filter @queue-forge/scheduler start
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/queue_forge
+      REDIS_URL: redis://redis:6379
+      SCHEDULER_METRICS_PORT: 9103
+    ports:
+      - "9103:9103"
+    volumes:
+      - ../../:/workspace
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: queue-forge-prometheus
+    restart: unless-stopped
+    depends_on:
+      - api
+      - worker
+      - publisher
+      - scheduler
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: queue-forge-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "3001:3000"
+    volumes:
+      - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../monitoring/grafana/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  postgres_data:

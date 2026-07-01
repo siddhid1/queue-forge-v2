@@ -1,0 +1,167 @@
+{
+  "id": "2df33ad6-4bf3-4d5f-a11b-ea2a0a0bbd67",
+  "prevId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.dead_letter_jobs": {
+      "name": "dead_letter_jobs",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "job_id": { "name": "job_id", "type": "uuid", "primaryKey": false, "notNull": true },
+        "reason": { "name": "reason", "type": "varchar(1000)", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {}, "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.idempotency_keys": {
+      "name": "idempotency_keys", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "key": { "name": "key", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "job_id": { "name": "job_id", "type": "uuid", "primaryKey": false, "notNull": true },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {}, "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": { "idempotency_keys_key_unique": { "name": "idempotency_keys_key_unique", "nullsNotDistinct": false, "columns": ["key"] } }, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.jobs": {
+      "name": "jobs", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "queue_id": { "name": "queue_id", "type": "uuid", "primaryKey": false, "notNull": false },
+        "name": { "name": "name", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "payload": { "name": "payload", "type": "jsonb", "primaryKey": false, "notNull": true },
+        "priority": { "name": "priority", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "status": { "name": "status", "type": "varchar(50)", "primaryKey": false, "notNull": true },
+        "attempts": { "name": "attempts", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "max_attempts": { "name": "max_attempts", "type": "integer", "primaryKey": false, "notNull": true, "default": 3 },
+        "version": { "name": "version", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "run_at": { "name": "run_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "cancellation_requested_at": { "name": "cancellation_requested_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "completed_at": { "name": "completed_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {
+        "jobs_queue_status_created_idx": { "name": "jobs_queue_status_created_idx", "columns": [{"expression": "queue_id", "asc": true, "isExpression": false}, {"expression": "status", "asc": true, "isExpression": false}, {"expression": "created_at", "asc": true, "isExpression": false}], "isUnique": false },
+        "jobs_status_run_at_idx": { "name": "jobs_status_run_at_idx", "columns": [{"expression": "status", "asc": true, "isExpression": false}, {"expression": "run_at", "asc": true, "isExpression": false}], "isUnique": false }
+      },
+      "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.workers": {
+      "name": "workers", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "hostname": { "name": "hostname", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "status": { "name": "status", "type": "varchar(50)", "primaryKey": false, "notNull": true },
+        "last_heartbeat": { "name": "last_heartbeat", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {}, "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.job_executions": {
+      "name": "job_executions", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "job_id": { "name": "job_id", "type": "uuid", "primaryKey": false, "notNull": true },
+        "started_at": { "name": "started_at", "type": "timestamp", "primaryKey": false, "notNull": true },
+        "finished_at": { "name": "finished_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "status": { "name": "status", "type": "varchar(50)", "primaryKey": false, "notNull": false },
+        "error_message": { "name": "error_message", "type": "varchar(1000)", "primaryKey": false, "notNull": false }
+      },
+      "indexes": {}, "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.outbox_events": {
+      "name": "outbox_events", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "event_type": { "name": "event_type", "type": "varchar(100)", "primaryKey": false, "notNull": true },
+        "aggregate_type": { "name": "aggregate_type", "type": "varchar(100)", "primaryKey": false, "notNull": true, "default": "'job'" },
+        "aggregate_id": { "name": "aggregate_id", "type": "uuid", "primaryKey": false, "notNull": false },
+        "deduplication_key": { "name": "deduplication_key", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "payload": { "name": "payload", "type": "jsonb", "primaryKey": false, "notNull": true },
+        "processed_at": { "name": "processed_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "attempts": { "name": "attempts", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "next_attempt_at": { "name": "next_attempt_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "last_error": { "name": "last_error", "type": "varchar(1000)", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {
+        "outbox_pending_idx": { "name": "outbox_pending_idx", "columns": [{"expression": "processed_at", "asc": true, "isExpression": false}, {"expression": "next_attempt_at", "asc": true, "isExpression": false}, {"expression": "created_at", "asc": true, "isExpression": false}], "isUnique": false }
+      },
+      "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": { "outbox_events_deduplication_key_unique": { "name": "outbox_events_deduplication_key_unique", "nullsNotDistinct": false, "columns": ["deduplication_key"] } }, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.queues": {
+      "name": "queues", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "name": { "name": "name", "type": "varchar(100)", "primaryKey": false, "notNull": true },
+        "state": { "name": "state", "type": "varchar(20)", "primaryKey": false, "notNull": true, "default": "'ACTIVE'" },
+        "version": { "name": "version", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "state_reason": { "name": "state_reason", "type": "varchar(500)", "primaryKey": false, "notNull": false },
+        "paused_at": { "name": "paused_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {
+        "queues_state_idx": { "name": "queues_state_idx", "columns": [{"expression": "state", "asc": true, "isExpression": false}], "isUnique": false }
+      },
+      "foreignKeys": {}, "compositePrimaryKeys": {},
+      "uniqueConstraints": { "queues_name_unique": { "name": "queues_name_unique", "nullsNotDistinct": false, "columns": ["name"] } },
+      "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.job_events": {
+      "name": "job_events", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "job_id": { "name": "job_id", "type": "uuid", "primaryKey": false, "notNull": true },
+        "event_type": { "name": "event_type", "type": "varchar(100)", "primaryKey": false, "notNull": true },
+        "from_status": { "name": "from_status", "type": "varchar(50)", "primaryKey": false, "notNull": false },
+        "to_status": { "name": "to_status", "type": "varchar(50)", "primaryKey": false, "notNull": false },
+        "version": { "name": "version", "type": "integer", "primaryKey": false, "notNull": true },
+        "actor_type": { "name": "actor_type", "type": "varchar(50)", "primaryKey": false, "notNull": true },
+        "actor_id": { "name": "actor_id", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "metadata": { "name": "metadata", "type": "jsonb", "primaryKey": false, "notNull": true, "default": "'{}'" },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {
+        "job_events_job_created_idx": { "name": "job_events_job_created_idx", "columns": [{"expression": "job_id", "asc": true, "isExpression": false}, {"expression": "created_at", "asc": true, "isExpression": false}], "isUnique": false }
+      },
+      "foreignKeys": {
+        "job_events_job_id_jobs_id_fk": { "name": "job_events_job_id_jobs_id_fk", "tableFrom": "job_events", "tableTo": "jobs", "columnsFrom": ["job_id"], "columnsTo": ["id"], "onDelete": "no action", "onUpdate": "no action" }
+      },
+      "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    },
+    "public.audit_logs": {
+      "name": "audit_logs", "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "uuid", "primaryKey": true, "notNull": true, "default": "gen_random_uuid()" },
+        "actor_id": { "name": "actor_id", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "action": { "name": "action", "type": "varchar(100)", "primaryKey": false, "notNull": true },
+        "target_type": { "name": "target_type", "type": "varchar(100)", "primaryKey": false, "notNull": true },
+        "target_id": { "name": "target_id", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "reason": { "name": "reason", "type": "varchar(500)", "primaryKey": false, "notNull": true },
+        "outcome": { "name": "outcome", "type": "varchar(50)", "primaryKey": false, "notNull": true },
+        "request_id": { "name": "request_id", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "change_summary": { "name": "change_summary", "type": "jsonb", "primaryKey": false, "notNull": true, "default": "'{}'" },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {
+        "audit_logs_target_created_idx": { "name": "audit_logs_target_created_idx", "columns": [{"expression": "target_type", "asc": true, "isExpression": false}, {"expression": "target_id", "asc": true, "isExpression": false}, {"expression": "created_at", "asc": true, "isExpression": false}], "isUnique": false }
+      },
+      "foreignKeys": {}, "compositePrimaryKeys": {}, "uniqueConstraints": {}, "policies": {}, "checkConstraints": {}, "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

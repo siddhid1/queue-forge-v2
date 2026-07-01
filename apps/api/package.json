@@ -1,0 +1,32 @@
+{
+  "name": "@queue-forge/api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint .",
+    "test": "tsx --test src/modules/operations/queues/queue.service.test.ts src/modules/operations/workers/worker.service.test.ts src/modules/operations/metrics/metrics.service.test.ts src/modules/operations/jobs/job-read.service.test.ts src/modules/operations/jobs/job-command.service.test.ts src/modules/operations/dead-letter/dead-letter.service.test.ts src/modules/operations/audit/audit.service.test.ts src/modules/jobs/job.service.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@queue-forge/database": "workspace:*",
+    "@queue-forge/redis": "workspace:*",
+    "@queue-forge/metrics": "workspace:*",
+    "@queue-forge/logger": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^5.7.3"
+  }
+}

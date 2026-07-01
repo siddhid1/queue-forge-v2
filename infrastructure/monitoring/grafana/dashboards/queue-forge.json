@@ -1,0 +1,101 @@
+{
+  "uid": "queue-forge",
+  "title": "Queue Forge Operations",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Jobs Created / Completed / Failed per Second",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(queue_forge_jobs_created_total[5m])", "legendFormat": "created" },
+        { "expr": "rate(queue_forge_jobs_completed_total[5m])", "legendFormat": "completed" },
+        { "expr": "rate(queue_forge_jobs_failed_total[5m])", "legendFormat": "failed" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Execution Latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(queue_forge_job_execution_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(queue_forge_job_execution_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(queue_forge_job_execution_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "Outbox Lag and Pending Events",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "queue_forge_outbox_lag_seconds", "legendFormat": "lag seconds" },
+        { "expr": "queue_forge_outbox_pending_events", "legendFormat": "pending events" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "id": 4,
+      "title": "Outbox Publish Rate",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(queue_forge_outbox_events_published_total[5m])", "legendFormat": "published" },
+        { "expr": "rate(queue_forge_outbox_events_failed_total[5m])", "legendFormat": "failed" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+    },
+    {
+      "id": 5,
+      "title": "Delayed Jobs Promoted",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(queue_forge_delayed_jobs_promoted_total[5m])", "legendFormat": "promoted" }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 }
+    },
+    {
+      "id": 6,
+      "title": "Worker Count and Health",
+      "type": "stat",
+      "targets": [
+        { "expr": "up{job=\"worker\"}", "legendFormat": "workers up" }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 }
+    },
+    {
+      "id": 7,
+      "title": "Retry and DLQ Rate",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(queue_forge_jobs_failed_total[5m])", "legendFormat": "retry candidates" },
+        { "expr": "rate(queue_forge_jobs_failed_total[15m])", "legendFormat": "dlq proxy" }
+      ],
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 }
+    },
+    {
+      "id": 8,
+      "title": "Queue Depth by Status",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "queue_forge_outbox_pending_events", "legendFormat": "pending dispatch" }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 }
+    }
+  ]
+}

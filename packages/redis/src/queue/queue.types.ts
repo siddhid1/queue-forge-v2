@@ -1,0 +1,5 @@
+export enum QueuePriority {
+  LOW = 1,
+  MEDIUM = 5,
+  HIGH = 10,
+}
